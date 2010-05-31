@@ -3,7 +3,7 @@
 import Data.List
 
 data Point = Point (Double,Double)
-              deriving (Show)
+              deriving (Eq,Show)
 
 data Direction = Direction | Straight
                            | LeftTurn 
@@ -20,8 +20,8 @@ calcTurn p1 p2 p3 = case compare (crossProduct p1 p2 p3) 0 of
                          GT -> LeftTurn
                          LT -> RightTurn
 
-cotangent :: Point -> Point -> Double
-cotangent (Point (x1,y1)) (Point (x2,y2)) = (x2 - x1) / (y2 - y1)
+getAngle :: Point -> Point -> Double
+getAngle (Point (x1,y1)) (Point (x2,y2)) = atan2 (y2 - y1) (x2 - x1)
 
 compareY :: Point -> Point -> Ordering
 compareY (Point (x1,y1)) (Point (x2, y2)) | y1 > y2   = GT
@@ -30,9 +30,12 @@ compareY (Point (x1,y1)) (Point (x2, y2)) | y1 > y2   = GT
                                           | x1 < x2   = LT
 
 compareAngle :: Point -> Point -> Point -> Ordering
-compareAngle pvt p1 p2 | cotangent pvt p1 > cotangent pvt p2 = GT
-                       | cotangent pvt p1 < cotangent pvt p2 = LT
-                       | otherwise                           = EQ 
+compareAngle pvt p1 p2 | getAngle pvt p1 > getAngle pvt p2 = GT
+                       | getAngle pvt p1 < getAngle pvt p2 = LT
+                       | otherwise                         = EQ 
+
+removeTail :: [a] -> [a]
+removeTail xs = reverse (drop 1 (reverse xs))
 
 lowestY :: [Point] -> Point
 lowestY ps = minimumBy compareY ps
@@ -41,16 +44,24 @@ sortPoints :: [Point] -> [Point]
 sortPoints ps = sortBy (compareAngle (lowestY ps)) ps
 
 convexHull :: [Point] -> [Point]
-convexHull ps = grahamScan (sortPoints ps)
+convexHull ps = nub (grahamScan [] (nub (sortPoints ps)))
 
-grahamScan :: [Point] -> [Point]
-grahamScan [] = []
-grahamScan (p1:[]) = []
-grahamScan (p1:p2:[]) = []
-grahamScan (p1:p2:p3:[]) = case (calcTurn p1 p2 p3) == RightTurn of
-                             False -> [p1] ++ [p2] ++ [p3]
-                             True  -> []
+grahamScan :: [Point] -> [Point] -> [Point]
+grahamScan lst [] = []
+grahamScan lst (p1:[]) = []
+grahamScan lst (p1:p2:[]) = []
 
-grahamScan (p1:p2:p3:p4:ps) = case (calcTurn p1 p2 p3) == RightTurn of
-                                   True   -> grahamScan(p1:p3:p4:ps)
-                                   False  -> [p1] ++ [p2] ++ [p3] ++ grahamScan(p4:ps)
+grahamScan lst (p1:p2:p3:ps) | lst == [] && ps == [] = case (calcTurn p1 p2 p3) == RightTurn of 
+                                                       True  -> lst ++ [p1] ++ [p3]
+                                                       False -> lst ++ [p1] ++ [p2] ++ [p3]
+
+                             | lst == [] = case (calcTurn p1 p2 p3) == RightTurn of
+                                           True   -> grahamScan [] (p1:p3:ps)
+                                           False  -> [p1] ++ grahamScan [p1] (p2:p3:ps)
+
+                             | otherwise = case (calcTurn p1 p2 p3) == RightTurn of
+                                           True  -> grahamScan (removeTail lst) (head (reverse lst):p1:p3:ps)
+                                           False -> [p1] ++ grahamScan (lst ++ [p1]) (p2:p3:ps)
+
+ctest  = [Point(-3,7),Point(-2,6),Point(-1,4),Point(0,1),Point(0,0),Point(1,4),Point(2,6),Point(3,7)]
+ctest2 = [Point(0,0),Point(1,1),Point(-1,1),Point(0.5,0.9),Point(0,0.7)]

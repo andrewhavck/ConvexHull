@@ -51,11 +51,11 @@ grahamScan lst [] = []
 grahamScan lst (p1:[]) = []
 grahamScan lst (p1:p2:[]) = []
 
-grahamScan lst (p1:p2:p3:ps) | ps == [] && lst == [] = case (calcTurn p1 p2 p3) == RightTurn of 
-                                                       True  -> lst ++ [p1] ++ [p3]
-                                                       False -> lst ++ [p1] ++ [p2] ++ [p3]
+grahamScan lst (p1:p2:p3:ps) | (null ps) && (null lst) = case (calcTurn p1 p2 p3) == RightTurn of 
+                                                       True  -> [p1] ++ [p3]
+                                                       False -> [p1] ++ [p2] ++ [p3]
 
-                             | lst == [] = case (calcTurn p1 p2 p3) == RightTurn of
+                             | (null lst) = case (calcTurn p1 p2 p3) == RightTurn of
                                            True   -> grahamScan [] (p1:p3:ps)
                                            False  -> grahamScan [p1] (p2:p3:ps)
 
@@ -63,5 +63,6 @@ grahamScan lst (p1:p2:p3:ps) | ps == [] && lst == [] = case (calcTurn p1 p2 p3) 
                                            True  -> grahamScan (removeTail lst) (head (reverse lst):p1:p3:ps)
                                            False -> grahamScan (lst ++ [p1]) (p2:p3:ps)
 
+-- Test cases
 ctest  = [Point(-3,7),Point(-2,6),Point(-1,4),Point(0,1),Point(0,0),Point(1,4),Point(2,6),Point(3,7)]
 ctest2 = [Point(0,0),Point(1,1),Point(-1,1),Point(0.5,0.9),Point(0,0.7)]

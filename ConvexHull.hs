@@ -34,9 +34,6 @@ compareAngle pvt p1 p2 | getAngle pvt p1 > getAngle pvt p2 = GT
                        | getAngle pvt p1 < getAngle pvt p2 = LT
                        | otherwise                         = EQ 
 
-removeTail :: [a] -> [a]
-removeTail xs = reverse (drop 1 (reverse xs))
-
 lowestY :: [Point] -> Point
 lowestY ps = minimumBy compareY ps
 
@@ -60,7 +57,7 @@ grahamScan lst (p1:p2:p3:ps) | (null ps) && (null lst) = case (calcTurn p1 p2 p3
                                            False  -> grahamScan [p1] (p2:p3:ps)
 
                              | otherwise = case (calcTurn p1 p2 p3) == RightTurn of
-                                           True  -> grahamScan (removeTail lst) (head (reverse lst):p1:p3:ps)
+                                           True  -> grahamScan (init lst) ((last lst):p1:p3:ps)
                                            False -> grahamScan (lst ++ [p1]) (p2:p3:ps)
 
 -- Test cases
